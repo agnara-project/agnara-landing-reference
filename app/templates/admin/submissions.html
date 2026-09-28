@@ -1,0 +1,61 @@
+{% extends "admin/base.html" %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <h2>All Submissions</h2>
+    
+    <div>
+        <form action="/admin/submissions" method="GET" style="display: flex; gap: 0.5rem;">
+            <select name="status" onchange="this.form.submit()" style="padding: 0.5rem; border-radius: 4px; border: 1px solid var(--border-color);">
+                <option value="">All Statuses</option>
+                <option value="new" {% if status_filter == 'new' %}selected{% endif %}>New</option>
+                <option value="reviewed" {% if status_filter == 'reviewed' %}selected{% endif %}>Reviewed</option>
+                <option value="archived" {% if status_filter == 'archived' %}selected{% endif %}>Archived</option>
+            </select>
+        </form>
+    </div>
+</div>
+
+<div class="card" style="padding: 0; overflow: hidden;">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Date</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sub in submissions %}
+            <tr>
+                <td>{{ sub.id }}</td>
+                <td>{{ sub.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>{{ sub.name }}</td>
+                <td>{{ sub.email }}</td>
+                <td>
+                    <span class="badge badge-{{ sub.status }}">{{ sub.status|title }}</span>
+                </td>
+                <td>
+                    <a href="/admin/submissions/{{ sub.id }}" class="btn btn-sm btn-outline">View</a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" style="text-align: center;">No submissions found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div style="margin-top: 1rem; text-align: center;">
+    {% if page > 1 %}
+        <a href="?page={{ page - 1 }}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="btn btn-sm btn-outline">Previous</a>
+    {% endif %}
+    <span style="margin: 0 1rem;">Page {{ page }}</span>
+    <a href="?page={{ page + 1 }}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="btn btn-sm btn-outline">Next</a>
+</div>
+{% endblock %}

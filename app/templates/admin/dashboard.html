@@ -1,0 +1,58 @@
+{% extends "admin/base.html" %}
+
+{% block content %}
+<h2>Dashboard</h2>
+
+<div class="grid" style="grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-top: 1.5rem;">
+    <div class="card" style="text-align: center;">
+        <h3 style="font-size: 2rem; margin: 0; color: var(--primary-color);">{{ stats.total_submissions }}</h3>
+        <p style="margin: 0.5rem 0 0 0; opacity: 0.7;">Total Submissions</p>
+    </div>
+    <div class="card" style="text-align: center;">
+        <h3 style="font-size: 2rem; margin: 0;">{{ stats.new_submissions }}</h3>
+        <p style="margin: 0.5rem 0 0 0; opacity: 0.7;">New</p>
+    </div>
+    <div class="card" style="text-align: center;">
+        <h3 style="font-size: 2rem; margin: 0;">{{ stats.reviewed_submissions }}</h3>
+        <p style="margin: 0.5rem 0 0 0; opacity: 0.7;">Reviewed</p>
+    </div>
+    <div class="card" style="text-align: center;">
+        <h3 style="font-size: 2rem; margin: 0;">{{ stats.archived_submissions }}</h3>
+        <p style="margin: 0.5rem 0 0 0; opacity: 0.7;">Archived</p>
+    </div>
+</div>
+
+<h3 style="margin-top: 3rem;">Recent Messages</h3>
+<div class="card" style="padding: 0; overflow: hidden; margin-top: 1rem;">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sub in stats.recent_messages %}
+            <tr>
+                <td>{{ sub.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>{{ sub.name }}</td>
+                <td>{{ sub.email }}</td>
+                <td>
+                    <span class="badge badge-{{ sub.status }}">{{ sub.status|title }}</span>
+                </td>
+                <td>
+                    <a href="/admin/submissions/{{ sub.id }}" class="btn btn-sm btn-outline">View</a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" style="text-align: center;">No recent submissions.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

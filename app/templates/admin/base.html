@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Agnara Admin{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+    <style>
+        body { background-color: var(--bg-alt); }
+        .admin-nav { display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem; background: white; border-bottom: 1px solid var(--border-color); }
+        .admin-sidebar { width: 250px; background: white; height: calc(100vh - 65px); border-right: 1px solid var(--border-color); padding: 1rem; position: fixed; }
+        .admin-content { margin-left: 250px; padding: 2rem; }
+        .sidebar-link { display: block; padding: 0.75rem 1rem; color: var(--text-color); text-decoration: none; border-radius: 4px; margin-bottom: 0.5rem; }
+        .sidebar-link:hover { background-color: var(--bg-alt); }
+    </style>
+</head>
+<body>
+    <header class="admin-nav">
+        <div class="logo">Agnara Admin</div>
+        <form action="/admin/logout" method="POST" style="margin: 0;">
+            <button type="submit" class="btn btn-outline btn-sm">Logout</button>
+        </form>
+    </header>
+    
+    <aside class="admin-sidebar">
+        <a href="/admin" class="sidebar-link">Dashboard</a>
+        <a href="/admin/submissions" class="sidebar-link">Submissions</a>
+        <a href="/" class="sidebar-link" style="margin-top: 2rem; opacity: 0.7;">&larr; Back to Site</a>
+    </aside>
+    
+    <main class="admin-content">
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

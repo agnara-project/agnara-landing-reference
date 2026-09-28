@@ -1,0 +1,42 @@
+{% extends "admin/base.html" %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <div>
+        <a href="/admin/submissions" style="color: var(--primary-color); text-decoration: none;">&larr; Back to Submissions</a>
+        <h2 style="margin-top: 0.5rem;">Submission #{{ submission.id }}</h2>
+    </div>
+    
+    <div>
+        <form action="/admin/submissions/{{ submission.id }}/status" method="POST" style="display: flex; gap: 0.5rem;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <select name="status" style="padding: 0.5rem; border-radius: 4px; border: 1px solid var(--border-color);">
+                <option value="new" {% if submission.status == 'new' %}selected{% endif %}>New</option>
+                <option value="reviewed" {% if submission.status == 'reviewed' %}selected{% endif %}>Reviewed</option>
+                <option value="archived" {% if submission.status == 'archived' %}selected{% endif %}>Archived</option>
+            </select>
+            <button type="submit" class="btn btn-primary btn-sm">Update Status</button>
+        </form>
+    </div>
+</div>
+
+<div class="card" style="margin-bottom: 2rem;">
+    <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div>
+            <p><strong>Name:</strong> {{ submission.name }}</p>
+            <p><strong>Email:</strong> <a href="mailto:{{ submission.email }}">{{ submission.email }}</a></p>
+            <p><strong>Company:</strong> {{ submission.company or 'N/A' }}</p>
+        </div>
+        <div>
+            <p><strong>Date:</strong> {{ submission.created_at.strftime('%Y-%m-%d %H:%M:%S UTC') }}</p>
+            <p><strong>Phone:</strong> {{ submission.phone or 'N/A' }}</p>
+            <p><strong>Subject:</strong> {{ submission.subject or 'N/A' }}</p>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h3 style="margin-top: 0;">Message</h3>
+    <div style="background-color: var(--bg-alt); padding: 1rem; border-radius: 4px; white-space: pre-wrap; font-family: inherit;">{{ submission.message }}</div>
+</div>
+{% endblock %}
