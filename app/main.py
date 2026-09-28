@@ -83,7 +83,7 @@ api = (
         capabilities,
         dependencies=dependencies,
         openapi=OpenApiInfo(title="Agnara API", version="1.0.0"),
-        documentation=HttpDocumentation(), explorer=HttpExplorer(),
+        documentation=HttpDocumentation(),
     )
 )
 

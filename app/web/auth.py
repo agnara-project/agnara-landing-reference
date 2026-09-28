@@ -9,12 +9,14 @@ from starlette.templating import Jinja2Templates
 
 from app.web.security import generate_csrf_token
 
+from app.settings import settings
+
 templates = Jinja2Templates(directory="app/templates")
 ph = PasswordHasher()
 
 
 def get_admin_credentials():
-    return os.getenv("ADMIN_USERNAME", "admin"), os.getenv("ADMIN_PASSWORD_HASH", "")
+    return settings.ADMIN_USERNAME, settings.ADMIN_PASSWORD_HASH
 
 
 async def login_get(request: Request):
