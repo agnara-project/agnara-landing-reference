@@ -1,43 +1,50 @@
 # Architecture
 
-This project follows a strict **Agnara-first** architecture, implementing a clear separation of concerns.
+This project is built around the philosophy that **Agnara is the application runtime**, while other technologies act as hosts, adapters, or presentation layers.
 
-## Principles
-
-1. **Agnara as Core**: Business logic and application boundaries belong in Agnara capabilities.
-2. **Dependency Injection**: Capabilities depend on abstract contracts (Protocols), not concrete implementations (like SQLAlchemy).
-3. **Web as a Detail**: Starlette handles HTTP requests, sessions, and Jinja2 templates, but delegates all business operations to Agnara capabilities.
-
-## Layers
-
-### 1. Domain (`app/domain/`)
-- Contains pure Python types and Data Classes (e.g., `ContactSubmission`).
-- Contains Protocols/Interfaces (e.g., `ContactRepository`).
-- Has no dependencies on the database or the web framework.
-
-### 2. Capabilities / Application (`app/capabilities/`)
-- Agnara Capabilities represent the use cases (e.g., `submit_contact`, `dashboard_stats`).
-- They orchestrate domain objects and repository contracts.
-- They enforce business validation and logic.
-
-### 3. Infrastructure (`app/infrastructure/`)
-- Implements the contracts defined in the Domain.
-- Contains SQLAlchemy models, database connection logic, and the `SqlAlchemyContactRepository`.
-
-### 4. Presentation / Web (`app/web/` & `app/templates/`)
-- Handles HTTP requests using Starlette.
-- Manages security (CSRF, Auth, Headers).
-- Renders Jinja2 templates.
-- **Rule**: Never imports or uses Infrastructure components directly. It always calls Agnara capabilities.
-
-## Dependency Graph
+## The Execution Graph
 
 ```mermaid
-graph TD
-    A[Browser] -->|HTTP| B(Web Routes)
-    B -->|Capability Execution| C{Agnara Capabilities}
-    C -->|Uses| D[Domain Models]
-    C -->|Calls Interface| E[[Repository Protocol]]
-    F(Infrastructure / SQLAlchemy) -.->|Implements| E
-    F -->|Queries| G[(SQLite)]
+flowchart TD
+    Browser[Browser]
+    
+    subgraph Host[Host Boundary]
+        Starlette[Starlette Presentation Route]
+        AgnaraHttp[agnara-http Runtime]
+    end
+    
+    subgraph Agnara[Agnara Application Runtime]
+        Bridge[Agnara Runtime Bridge]
+        Runtime[CapabilityRuntime]
+        Capability[Agnara Capability]
+        DI[DIContainer]
+    end
+    
+    subgraph Infra[Infrastructure Layer]
+        Adapter[SqlAlchemy Adapter]
+        SQLite[(SQLite)]
+    end
+
+    Browser -->|HTTP POST| Starlette
+    Browser -->|HTTP POST| AgnaraHttp
+    
+    Starlette -->|Invocation| Bridge
+    Bridge -->|ExecutionContext| Runtime
+    AgnaraHttp -->|ExecutionContext| Runtime
+    
+    Runtime -->|Execute Plan| Capability
+    Runtime -.->|Inject dependencies| DI
+    DI -.->|Resolves| Adapter
+    
+    Capability -->|Uses Port| Adapter
+    Adapter --> SQLite
 ```
+
+## Direct Host Execution vs Native Agnara HTTP
+
+The diagram above illustrates the two ways a capability is reached:
+
+1. **Direct Host Execution**: A user visits the HTML landing page and submits a form. Starlette catches the POST, verifies CSRF, maps the payload into a plain Python dictionary, and passes it to the `Agnara Runtime Bridge`. The bridge constructs an `Invocation` and `ExecutionContext`, then calls `CapabilityRuntime.invoke_result()`.
+2. **Native Agnara HTTP**: A client sends a POST to `/api/contact`. The request is intercepted by the ASGI application compiled by `agnara-http`. It binds the `FORM` payload to the capability's schema natively, constructs an `ExecutionContext`, and calls `CapabilityRuntime.invoke_result()`.
+
+In both cases, execution semantics converge identically at the `CapabilityRuntime`. Validation, dependency injection, policies, and telemetry are enforced uniformly.

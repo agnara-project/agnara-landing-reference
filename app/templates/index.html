@@ -3,88 +3,217 @@
 {% block content %}
 <section class="hero">
     <div class="container hero-content">
-        <h1>Agent-first architecture for the modern web</h1>
-        <p class="hero-subtitle">Stop writing repetitive CRUD and spaghetti web routes. Define pure business capabilities and let Agnara handle the rest.</p>
+        <div class="hero-badges">
+            <span class="badge">v1.0.3</span>
+            <span class="badge">Python 3.14+</span>
+            <span class="badge">Apache-2.0</span>
+        </div>
+        <h1>Build capabilities once.<br><span class="text-gradient">Expose them everywhere.</span></h1>
+        <p class="hero-subtitle">A universal capability runtime for Python. Typed. Explicit. Transport-neutral. Agent-aware.</p>
+        
         <div class="hero-actions">
-            <a href="#contact" class="btn btn-primary">Get Started</a>
-            <a href="#architecture" class="btn btn-secondary">Learn More</a>
+            <div class="terminal-install">
+                <code>pip install "agnara==1.0.3"</code>
+                <button class="copy-btn" aria-label="Copy install command" data-copy="pip install &quot;agnara==1.0.3&quot;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                </button>
+            </div>
+            <a href="https://github.com/Blandskron/agnara" class="btn btn-secondary">GitHub</a>
+        </div>
+
+        <div class="hero-code-wrapper">
+            <div class="code-header">
+                <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                <span class="filename">capabilities.py</span>
+            </div>
+            <pre><code class="language-python">from agnara import App, StandardEffect, Risk
+
+contacts = App("contacts")
+
+@contacts.capability(
+    description="Receive a contact request.",
+    effects=(StandardEffect.DATABASE_WRITE,),
+    risk=Risk.LOW,
+    idempotent=False
+)
+async def submit(name: str, email: str, message: str) -> None:
+    # Business logic goes here. Agnara handles validation, 
+    # execution identity, telemetry, and policies.
+    ...</code></pre>
         </div>
     </div>
 </section>
 
-<section id="features" class="features section">
+<section id="why" class="section">
     <div class="container">
-        <h2 class="section-title">Value Proposition</h2>
-        <div class="grid features-grid">
-            <div class="card">
-                <h3>Capabilities as Code</h3>
-                <p>Define your core business rules completely independent of HTTP boundaries. Test easily, run anywhere.</p>
+        <div class="section-header center">
+            <h2>The Capability-First Architecture</h2>
+            <p>Traditional frameworks entangle business logic with transport protocols (HTTP handlers, MCP tools, CLI commands). Agnara inverts this: the capability owns the meaning, the transport owns how it is reached.</p>
+        </div>
+        
+        <div class="grid architecture-comparison">
+            <div class="card comparison-card old-way">
+                <div class="card-header">Traditional Protocol-First</div>
+                <div class="diagram">
+                    <div class="node box">HTTP handler</div><div class="arrow">&rarr;</div><div class="node core">business logic</div>
+                    <div class="node box">MCP tool</div><div class="arrow">&rarr;</div><div class="node core">business logic</div>
+                    <div class="node box">CLI command</div><div class="arrow">&rarr;</div><div class="node core">business logic</div>
+                </div>
             </div>
-            <div class="card">
-                <h3>Dependency Injection</h3>
-                <p>Agnara automatically wires repositories and services into your capabilities, enforcing clean architecture.</p>
-            </div>
-            <div class="card">
-                <h3>HTTP Native</h3>
-                <p>Expose any capability securely over HTTP with a single line of code using <code>agnara-http</code>.</p>
+            <div class="card comparison-card new-way">
+                <div class="card-header">Agnara Capability-First</div>
+                <div class="diagram capability-diagram">
+                    <div class="node box">HTTP</div>
+                    <div class="node box">MCP</div>
+                    <div class="node box">Direct</div>
+                    <div class="connector-down"></div>
+                    <div class="node capability">Capability (Agnara Runtime)</div>
+                </div>
             </div>
         </div>
     </div>
 </section>
 
-<section id="contact" class="contact section">
-    <div class="container contact-container">
-        <div class="contact-text">
-            <h2>Ready to evolve?</h2>
-            <p>Get in touch to learn how Agnara can simplify your architecture and accelerate your development cycle.</p>
+<section id="architecture" class="section alternate-bg">
+    <div class="container">
+        <div class="section-header">
+            <h2>Runtime Architecture</h2>
+            <p>Compile validation, dependencies, and policies before invocation.</p>
         </div>
-        <div class="contact-form-wrapper card">
-            <form id="contact-form" action="/contact" method="POST">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                <!-- Honeypot -->
-                <input type="url" name="website_url" id="website_url" class="sr-only" tabindex="-1" autocomplete="off">
-                
-                <div class="form-group">
-                    <label for="name">Name *</label>
-                    <input type="text" id="name" name="name" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="email">Email *</label>
-                    <input type="email" id="email" name="email" required>
-                </div>
-                
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="company">Company</label>
-                        <input type="text" id="company" name="company">
-                    </div>
-                    <div class="form-group">
-                        <label for="phone">Phone</label>
-                        <input type="tel" id="phone" name="phone">
-                    </div>
-                </div>
+        
+        <div class="runtime-flow">
+            <div class="flow-step">
+                <div class="step-title">1. App & Registry</div>
+                <p>Capabilities are grouped into Bounded Contexts (Apps) and compiled into a <code>FrozenCapabilityRegistry</code>.</p>
+            </div>
+            <div class="flow-arrow">&darr;</div>
+            <div class="flow-step">
+                <div class="step-title">2. Execution Plan</div>
+                <p>Agnara statically analyzes signatures to compile a plan encompassing: schemas, policies, dependencies, and telemetry.</p>
+            </div>
+            <div class="flow-arrow">&darr;</div>
+            <div class="flow-step">
+                <div class="step-title">3. Capability Runtime</div>
+                <p>The <code>CapabilityRuntime</code> manages the active <code>ExecutionContext</code>, enforcing policies, injecting singletons, and returning canonical <code>Success</code> or <code>Failure</code> outcomes.</p>
+            </div>
+        </div>
+    </div>
+</section>
 
-                <div class="form-group">
-                    <label for="subject">Subject</label>
-                    <input type="text" id="subject" name="subject">
+<section id="features" class="section">
+    <div class="container">
+        <h2 class="section-title">Core Features</h2>
+        <div class="grid features-grid">
+            <div class="card feature-card">
+                <h3>Typed Schemas</h3>
+                <p>Python type hints form the contract. Agnara automatically validates inputs before the capability is even invoked.</p>
+            </div>
+            <div class="card feature-card">
+                <h3>Dependency Injection</h3>
+                <p>A native, highly performant <code>DIContainer</code> handles singleton scopes, generator cleanup, and dependency inversion.</p>
+            </div>
+            <div class="card feature-card">
+                <h3>Execution Policies</h3>
+                <p>Enforce authorization, risk levels, and idempotency guarantees deterministically via the runtime.</p>
+            </div>
+            <div class="card feature-card">
+                <h3>Canonical Outcomes</h3>
+                <p>Capabilities return standard <code>Success</code> or <code>Failure</code> objects. Expected domain errors are never thrown as exceptions.</p>
+            </div>
+            <div class="card feature-card">
+                <h3>Agent-Readable Metadata</h3>
+                <p>Standard effects, risk markers, and descriptions allow autonomous agents to safely reason about and orchestrate capabilities.</p>
+            </div>
+            <div class="card feature-card">
+                <h3>Native Introspection</h3>
+                <p>Explore your application's capabilities securely via the builtin HTTP Explorer or discovery APIs.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="agents" class="section alternate-bg">
+    <div class="container">
+        <div class="split-section">
+            <div class="split-content">
+                <h2>Built for humans.<br>Designed for agents.</h2>
+                <p>Agnara treats AI agents as first-class consumers of your application architecture.</p>
+                <ul class="check-list">
+                    <li>Stable capability identifiers</li>
+                    <li>Machine-readable <code>Risk</code> and <code>StandardEffect</code> markers</li>
+                    <li>Introspectable, strongly-typed schemas</li>
+                    <li>Explicit execution boundaries and outcomes</li>
+                </ul>
+                <p>This strict semantic layer allows agents to autonomously orchestrate operations with confidence, without screen-scraping UIs or guessing REST semantics.</p>
+            </div>
+            <div class="split-visual">
+                <div class="card terminal-card">
+                    <div class="card-header">Agent Discovery Output</div>
+                    <pre><code>{
+  "id": "contacts.submit",
+  "effects": ["database-write"],
+  "risk": "low",
+  "scopes_required": [],
+  "idempotent": false,
+  "schema": {
+    "name": {"type": "string"},
+    "email": {"type": "string", "format": "email"}
+  }
+}</code></pre>
                 </div>
-                
-                <div class="form-group">
-                    <label for="message">Message *</label>
-                    <textarea id="message" name="message" rows="4" required></textarea>
-                </div>
-                
-                <div id="form-feedback" class="form-feedback" aria-live="polite">
-                    {% if request.query_params.get("success") %}
-                        <div class="alert alert-success">Your message has been sent successfully!</div>
-                    {% elif request.query_params.get("error") %}
-                        <div class="alert alert-error">Error: {{ request.query_params.get("error") }}</div>
-                    {% endif %}
-                </div>
-                
-                <button type="submit" id="submit-btn" class="btn btn-primary btn-block">Send Message</button>
-            </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="dogfooding" class="section border-top">
+    <div class="container">
+        <div class="section-header center">
+            <h2>This website runs on Agnara.</h2>
+            <p>This is not a mock landing page. It's a live, executable reference implementation.</p>
+        </div>
+        
+        <div class="dogfooding-grid">
+            <div class="card demo-card">
+                <h3>1 Capability. 2 Surfaces.</h3>
+                <p>The form below hits a standard Starlette presentation route. The route maps the HTML POST payload into an Agnara <code>Invocation</code> and executes it via the <code>CapabilityRuntime</code>.</p>
+                <p>Simultaneously, the exact same <code>contacts.submit</code> capability is exposed natively at <code>/api/contact</code> using the <code>agnara-http</code> compiler—generating OpenAPI docs and JSON responses automatically.</p>
+                <p>SQLite and SQLAlchemy are injected via Agnara DI. The capability is unaware of both Starlette and the database engine.</p>
+            </div>
+            
+            <div class="card form-card" id="contact-form-wrapper">
+                <h3>Test the capability</h3>
+                <form id="contact-form" action="/contact" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <!-- Honeypot -->
+                    <input type="url" name="website_url" id="website_url" class="sr-only" tabindex="-1" autocomplete="off" aria-hidden="true">
+                    
+                    <div class="form-group">
+                        <label for="name">Name *</label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">Email *</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="message">Message *</label>
+                        <textarea id="message" name="message" rows="3" required></textarea>
+                    </div>
+                    
+                    <div id="form-feedback" class="form-feedback" aria-live="polite">
+                        {% if request.query_params.get("success") %}
+                            <div class="alert alert-success">Capability executed successfully. Record persisted!</div>
+                        {% elif request.query_params.get("error") %}
+                            <div class="alert alert-error">{{ request.query_params.get("error") }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <button type="submit" id="submit-btn" class="btn btn-primary btn-block">Invoke Capability</button>
+                </form>
+            </div>
         </div>
     </div>
 </section>

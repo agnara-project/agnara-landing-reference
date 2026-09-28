@@ -1,9 +1,9 @@
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from app.domain.models import ContactStatus, ContactSubmission
-from app.domain.repositories import ContactRepository
-from app.infrastructure.models import ContactSubmissionModel
+from app.apps.contacts.models import ContactStatus, ContactSubmission
+from app.apps.contacts.ports import ContactRepository
+from app.infrastructure.persistence.models import ContactSubmissionModel
 
 
 class SqlAlchemyContactRepository(ContactRepository):

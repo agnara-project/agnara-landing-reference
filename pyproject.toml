@@ -5,8 +5,8 @@ description = "Reference implementation of a web application using Agnara as the
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
-    "agnara>=0.1.0",
-    "agnara-http>=0.1.0",
+    "agnara==1.0.3",
+    "agnara-http==1.0.3",
     "starlette>=0.37.0",
     "uvicorn[standard]>=0.29.0",
     "sqlalchemy[asyncio]>=2.0.29",
@@ -28,7 +28,7 @@ dev = [
 
 [tool.ruff]
 line-length = 88
-target-version = "py312"
+target-version = "py314"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "N"]
@@ -37,3 +37,6 @@ ignore = []
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+env = [
+    "APP_ENV=development",
+]

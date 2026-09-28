@@ -3,33 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Agnara - Core Capabilities Engine{% endblock %}</title>
+    <title>{% block title %}Agnara — Universal Capability Runtime for Python{% endblock %}</title>
+    <meta name="description" content="Define application capabilities once and expose them through the transports your application needs. The universal capability runtime for Python 3.14+.">
+    <link rel="canonical" href="https://agnara.dev/">
+    <meta name="theme-color" content="#0a0a0a">
     <link rel="stylesheet" href="/static/css/main.css">
+    
+    <!-- OpenGraph -->
+    <meta property="og:title" content="Agnara — Universal Capability Runtime">
+    <meta property="og:description" content="Define application capabilities once and expose them through the transports your application needs.">
+    <meta property="og:type" content="website">
 </head>
 <body>
-    <nav class="navbar">
+    <nav class="navbar" aria-label="Main Navigation">
         <div class="container nav-content">
-            <a href="/" class="logo">Agnara</a>
+            <a href="/" class="logo" aria-label="Agnara Home">
+                <span class="logo-mark">A</span>gnara
+            </a>
             <div class="nav-links">
-                <a href="#features">Features</a>
+                <a href="#why">Why Agnara</a>
                 <a href="#architecture">Architecture</a>
-                <a href="#contact" class="btn btn-outline">Contact Us</a>
+                <a href="#features">Features</a>
+                <a href="#dogfooding">Live Demo</a>
+                <a href="/api/docs" target="_blank" rel="noopener">OpenAPI</a>
+                <div class="nav-divider"></div>
+                <a href="https://github.com/Blandskron/agnara" target="_blank" rel="noopener" class="nav-icon">GitHub</a>
+                <a href="#contact" class="btn btn-outline btn-sm">Contact Us</a>
             </div>
+            <button class="mobile-menu-btn" aria-expanded="false" aria-label="Toggle navigation">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
         </div>
     </nav>
 
-    <main>
+    <main id="main-content">
         {% block content %}{% endblock %}
     </main>
 
     <footer class="footer">
         <div class="container footer-content">
             <div class="footer-brand">
-                <p><strong>Agnara</strong></p>
-                <p>Build capabilities once. Expose them everywhere.</p>
+                <p class="footer-logo"><span class="logo-mark">A</span>gnara</p>
+                <p>The universal capability runtime for Python.</p>
+                <p class="footer-copy">&copy; 2026 Agnara Authors. Apache-2.0 License.</p>
             </div>
-            <div class="footer-links">
-                <a href="/admin">Admin Login</a>
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <h4>Ecosystem</h4>
+                    <a href="#">agnara</a>
+                    <a href="#">agnara-http</a>
+                    <a href="#">agnara-mcp</a>
+                    <a href="#">agnara-cli</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Resources</h4>
+                    <a href="#">Documentation</a>
+                    <a href="#">Security</a>
+                    <a href="#">Contributing</a>
+                    <a href="/admin">Admin Demo</a>
+                </div>
             </div>
         </div>
     </footer>

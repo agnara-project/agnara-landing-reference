@@ -1,20 +1,38 @@
+from agnara import Principal
+from agnara.execution import Failure
 from starlette.requests import Request
 from starlette.responses import HTMLResponse, RedirectResponse
 from starlette.routing import Route
 from starlette.templating import Jinja2Templates
 
+from app.runtime import invoke_capability
 from app.web.auth import requires_auth
 from app.web.security import generate_csrf_token, verify_csrf_token
 
 templates = Jinja2Templates(directory="app/templates")
 
 
+def get_admin_principal(request: Request) -> Principal:
+    # We map the Starlette authenticated session to an Agnara Principal
+    # We assign the required scopes for admin capabilities.
+    return Principal(
+        identity=request.session.get("admin", "admin"),
+        scopes={"contacts:read", "contacts:write"},
+    )
+
+
 @requires_auth
 async def admin_dashboard(request: Request):
-    from app.capabilities.admin import dashboard_stats
+    runtime = request.app.state.agnara_runtime
+    principal = get_admin_principal(request)
 
-    # Retrieve stats via capability
-    stats = await dashboard_stats()
+    result = await invoke_capability(
+        runtime, "contacts.dashboard", {}, principal=principal
+    )
+    if isinstance(result, Failure):
+        return HTMLResponse(f"Error: {result.message}", status_code=500)
+
+    stats = result.value
 
     return templates.TemplateResponse(request, "admin/dashboard.html", {"stats": stats})
 
@@ -29,11 +47,22 @@ async def admin_submissions(request: Request):
     limit = 20
     offset = (page - 1) * limit
 
-    from app.capabilities.contacts import list_contacts
+    runtime = request.app.state.agnara_runtime
+    principal = get_admin_principal(request)
 
-    submissions = await list_contacts(
-        status=status_filter if status_filter else None, limit=limit, offset=offset
+    payload = {
+        "status": status_filter if status_filter else None,
+        "limit": limit,
+        "offset": offset,
+    }
+
+    result = await invoke_capability(
+        runtime, "contacts.list", payload, principal=principal
     )
+    if isinstance(result, Failure):
+        return HTMLResponse(f"Error: {result.message}", status_code=500)
+
+    submissions = result.value
 
     return templates.TemplateResponse(
         request,
@@ -46,10 +75,17 @@ async def admin_submissions(request: Request):
 async def admin_submission_detail(request: Request):
     sub_id = int(request.path_params["id"])
 
-    from app.capabilities.contacts import get_contact
+    runtime = request.app.state.agnara_runtime
+    principal = get_admin_principal(request)
 
-    submission = await get_contact(submission_id=sub_id)
+    result = await invoke_capability(
+        runtime, "contacts.get", {"submission_id": sub_id}, principal=principal
+    )
 
+    if isinstance(result, Failure):
+        return HTMLResponse(f"Error: {result.message}", status_code=500)
+
+    submission = result.value
     if not submission:
         return HTMLResponse("Not Found", status_code=404)
 
@@ -76,9 +112,16 @@ async def admin_submission_update_status(request: Request):
     if status not in ["new", "reviewed", "archived"]:
         return HTMLResponse("Invalid Status", status_code=400)
 
-    from app.capabilities.contacts import update_contact_status
+    runtime = request.app.state.agnara_runtime
+    principal = get_admin_principal(request)
 
-    await update_contact_status(submission_id=sub_id, status=status)  # type: ignore
+    payload = {"submission_id": sub_id, "status": status}
+
+    result = await invoke_capability(
+        runtime, "contacts.update_status", payload, principal=principal
+    )
+    if isinstance(result, Failure):
+        return HTMLResponse(f"Error: {result.message}", status_code=500)
 
     return RedirectResponse(url=f"/admin/submissions/{sub_id}", status_code=303)
 

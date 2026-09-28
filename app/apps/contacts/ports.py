@@ -1,6 +1,6 @@
 from typing import Protocol
 
-from app.domain.models import ContactStatus, ContactSubmission
+from .models import ContactStatus, ContactSubmission
 
 
 class ContactRepository(Protocol):

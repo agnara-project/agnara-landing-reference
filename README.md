@@ -1,57 +1,80 @@
 # Agnara Landing Reference
 
-A professional, deployable reference implementation of a web application using **Agnara** as its core logic engine.
+The Agnara presentation website, powered by Agnara itself.
 
-## What is this?
-This project demonstrates how to build a real-world web application where Agnara owns the business logic and capabilities, while standard web technologies (Starlette, Jinja2, HTML/CSS/JS) handle presentation.
+This repository is both a presentation website for Agnara and an executable reference application demonstrating Agnara 1.0.3 as the application runtime.
 
-It includes:
-- A modern SaaS landing page.
-- A functional contact form with progressive enhancement (AJAX).
-- A protected Admin dashboard with Argon2 authentication.
-- SQLite database persistence with SQLAlchemy.
+## What this demonstrates
+
+This repository answers the question: *"What does a real web application look like when Agnara is the application runtime?"*
+
+It demonstrates that a web framework (Starlette) can host the application, but the actual semantic execution belongs entirely to Agnara.
 
 ## Architecture
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/AGNARA.md](docs/AGNARA.md) for detailed architectural guidelines.
 
-## Quick Start (Docker)
+```mermaid
+flowchart TD
+    Browser[Browser] -->|HTTP POST| Starlette[Starlette Presentation Route]
+    Browser -->|HTTP POST| AgnaraHttp[agnara-http /api/contact]
+    
+    Starlette -->|Invocation| CapabilityRuntime
+    AgnaraHttp -->|Invocation| CapabilityRuntime
+    
+    CapabilityRuntime -->|Executes Plan| Capability[contacts.submit Capability]
+    
+    CapabilityRuntime -.->|Injects| DIRegistry[Agnara DI]
+    DIRegistry --> RepositoryPort[ContactRepository Protocol]
+    
+    Capability --> RepositoryPort
+    RepositoryPort -.->|Implemented by| Adapter[SqlAlchemy Adapter]
+    Adapter --> SQLite[(SQLite /data)]
+```
 
-The easiest way to run the project is using Docker.
+### Agnara Responsibilities
+* **Capability Model**: Defines `contacts.submit`, `contacts.dashboard`, etc.
+* **Registry & Compilation**: Compiles schemas, policies, and dependencies before execution.
+* **Dependency Injection**: Injects `SqlAlchemyContactRepository` via `DIRegistry` and `@provider`.
+* **Policies**: Verifies scopes (e.g. `contacts:write`) against `Principal`.
+* **Runtime Invocation**: Coordinates execution via `CapabilityRuntime`.
+* **Canonical Outcomes**: Returns `Success` or `Failure`.
 
-1. Clone the repository.
-2. Copy the environment file:
-   ```bash
-   cp .env.example .env
-   ```
-3. Generate an admin password hash and add it to `.env`:
-   ```bash
-   # If you have uv/python installed locally:
-   uv run python scripts/create_admin_hash.py
-   # Or run a temporary container to generate it
-   ```
-4. Start the application:
-   ```bash
-   docker compose up --build
-   ```
-5. Open `http://localhost:8000` for the landing page.
-6. Open `http://localhost:8000/admin` for the admin panel.
+### Supporting Libraries
+* **Starlette**: ASGI host, Jinja2 template rendering, authentication sessions.
+* **SQLAlchemy & SQLite**: Persistence layer.
+* **Jinja2**: HTML rendering.
+* **Uvicorn**: ASGI Server.
 
-## Development (Local)
+## Quick Start
 
-1. Install dependencies using `uv`:
-   ```bash
-   uv sync
-   ```
-2. Start the dev server:
-   ```bash
-   make dev
-   ```
-3. Run tests:
-   ```bash
-   make test
-   ```
-4. Run linters:
-   ```bash
-   make lint
-   make format
-   ```
+```bash
+cp .env.example .env
+uv sync
+uv run python scripts/create_admin_hash.py 
+# Update ADMIN_PASSWORD_HASH in .env
+
+# Run server
+make dev
+```
+
+### Docker
+```bash
+docker compose up --build
+```
+The database persists inside a Docker volume mounted at `/data/agnara.db`.
+
+## Capabilities
+
+Defined in `app/apps/contacts/capabilities.py`.
+
+## HTTP API & OpenAPI
+
+The `contacts.submit` capability is exposed directly via `agnara-http` at `POST /api/contact`.
+OpenAPI documentation is available at `/api/docs` and `/api/openapi.json`.
+
+## Admin
+
+Admin routes require Starlette session authentication, which maps to an Agnara `Principal` with specific scopes. The `CapabilityRuntime` enforces these scopes before executing any admin capabilities.
+
+## Agents
+
+This repository is designed to be fully Agent-readable. Read `AGENTS.md`.

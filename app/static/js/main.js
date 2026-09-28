@@ -2,6 +2,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('contact-form');
     if (!form) return;
 
+    // Optional: copy commands
+    const copyBtns = document.querySelectorAll('.copy-btn');
+    copyBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const text = btn.getAttribute('data-copy');
+            if(text) navigator.clipboard.writeText(text);
+        });
+    });
+
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         
@@ -10,8 +19,18 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Reset state
         submitBtn.disabled = true;
-        submitBtn.textContent = 'Sending...';
-        feedback.innerHTML = '';
+        submitBtn.textContent = 'Executing...';
+        
+        while (feedback.firstChild) {
+            feedback.removeChild(feedback.firstChild);
+        }
+        
+        const showMessage = (msg, isError) => {
+            const div = document.createElement('div');
+            div.className = isError ? 'alert alert-error' : 'alert alert-success';
+            div.textContent = msg;
+            feedback.appendChild(div);
+        };
         
         try {
             const formData = new FormData(form);
@@ -27,16 +46,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
             
             if (response.ok) {
-                feedback.innerHTML = `<div class="alert alert-success">${result.message}</div>`;
+                showMessage(result.message, false);
                 form.reset();
             } else {
-                feedback.innerHTML = `<div class="alert alert-error">${result.message || 'Something went wrong.'}</div>`;
+                showMessage(result.message || 'Something went wrong.', true);
             }
         } catch (error) {
-            feedback.innerHTML = `<div class="alert alert-error">Network error. Please try again.</div>`;
+            showMessage('Network error. Please try again.', true);
         } finally {
             submitBtn.disabled = false;
-            submitBtn.textContent = 'Send Message';
+            submitBtn.textContent = 'Invoke Capability';
         }
     });
 });

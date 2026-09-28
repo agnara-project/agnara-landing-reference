@@ -1,12 +1,20 @@
+import os
+
+os.environ["APP_ENV"] = "development"
+
 from collections.abc import AsyncGenerator
 
 import pytest
+from agnara.core.di import DIContainer
+from agnara.di import DIRegistry, provider
+from agnara.execution import CapabilityRuntime, ExecutionPlan
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from app.infrastructure.database import Base
-from app.infrastructure.repositories import SqlAlchemyContactRepository
-from app.main import app
+from app.apps.contacts.ports import ContactRepository
+from app.infrastructure.persistence.database import Base
+from app.infrastructure.persistence.repositories import SqlAlchemyContactRepository
+from app.main import app, project
 
 # Use an in-memory SQLite database for testing
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
@@ -34,8 +42,41 @@ def repository(session_factory) -> SqlAlchemyContactRepository:
 
 
 @pytest.fixture
-async def client() -> AsyncGenerator[AsyncClient, None]:
+async def test_runtime(repository):
+    capabilities = project.compile()
+
+    dependencies = DIRegistry()
+
+    @provider()
+    def provide_repo() -> ContactRepository:
+        return repository
+
+    dependencies.bind(ContactRepository, provide_repo)
+
+    plans = tuple(
+        ExecutionPlan.compile(
+            capabilities[capability_id],
+            dependencies,
+        )
+        for capability_id in capabilities
+    )
+
+    container = DIContainer(dependencies)
+    runtime = CapabilityRuntime(
+        capabilities,
+        plans,
+        container,
+    )
+
+    yield runtime
+
+    await runtime.aclose()
+    await container.aclose()
+
+
+@pytest.fixture
+async def client() -> AsyncGenerator[AsyncClient]:
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
-    ) as client:  # type: ignore
+    ) as client:
         yield client

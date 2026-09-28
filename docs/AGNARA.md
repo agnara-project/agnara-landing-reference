@@ -1,30 +1,33 @@
-# Agnara Core Integration
+# Agnara Architectural Audit
 
-This document clarifies exactly where and how Agnara is used in this project.
+This document traces exactly how Agnara 1.0.3 components are used in this reference application.
 
-## Responsibilities
+## 1. App Model
+We define `App("contacts")` in `app/apps/contacts/app.py`. This groups the domain boundaries natively.
 
-**Agnara Controls:**
-- Capability definitions (the use cases of the application).
-- Dependency Injection (wiring repositories into capabilities).
-- Business operations and validation.
-- HTTP capability exposure (via `agnara-http`).
+## 2. Capabilities
+Capabilities (`submit`, `list`, `get`, `update_status`, `dashboard`) are defined using `@app.capability()` and they include metadata like `Risk`, `StandardEffect`, `scopes`, and `idempotent`.
 
-**Other Libraries:**
-- **Jinja2**: Renders HTML templates for the browser.
-- **Starlette**: Acts as the ASGI host, composing static files, sessions, and the web routes.
-- **SQLAlchemy**: An infrastructure adapter to handle persistence.
-- **SQLite**: The storage engine.
-- **Uvicorn**: The ASGI server running the application.
+## 3. Composition Root & Frozen Registry
+In `app/main.py`, the global `Agnara("agnara_site")` includes the `contacts` app and compiles it into a `FrozenCapabilityRegistry`.
 
-## Example Flow
+## 4. Execution Plans
+The `FrozenCapabilityRegistry` is iterated over, and `ExecutionPlan.compile(definition, dependencies)` is called for each to build static execution paths.
 
-When a user submits the contact form:
-1. Starlette receives the `POST /contact` request.
-2. The route handler validates the CSRF token and extracts form data.
-3. The route handler retrieves the `submit_contact` capability from the Agnara `App` instance.
-4. The capability is executed. Agnara automatically injects the registered `ContactRepository`.
-5. The capability validates the input and calls the repository.
-6. The repository (implemented via SQLAlchemy) saves the data to SQLite.
-7. The capability returns the domain model to the route handler.
-8. Starlette returns a JSON or Redirect response.
+## 5. Dependency Injection
+`DIRegistry()` is instantiated in `app/main.py`. The `@provider()` decorator is used to map `ContactRepository` to `SqlAlchemyContactRepository`. A global `DIContainer` holds this registry.
+
+## 6. CapabilityRuntime
+`CapabilityRuntime` is initialized with the capabilities, plans, and DI container. It is attached to the Starlette application state to serve as the unified execution boundary.
+
+## 7. Bridge (Invocation, ExecutionContext, Principal)
+`app/runtime.py` creates a bridge for Starlette routes. It builds an `Invocation` from the HTTP payload, sets up an `ExecutionContext`, handles `AnonymousPrincipal` or a scoped `Principal`, and calls `runtime.invoke_result()`.
+
+## 8. Canonical Outcomes
+Starlette routes check `isinstance(result, Failure)` and `isinstance(result, Success)` to determine HTTP status codes and responses.
+
+## 9. Agnara HTTP
+`agnara-http` compiles a native HTTP API using `Http("api").post(...)`, mapping `BindingSource.FORM` directly to the `submit` capability.
+
+## 10. OpenAPI
+`OpenApiInfo` and `HttpDocumentation` generate an OpenAPI specification and serve a Swagger UI at `/api/docs`.

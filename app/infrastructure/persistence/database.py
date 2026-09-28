@@ -3,10 +3,10 @@ import os
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base
 
-# Get Database URL from environment or fallback to local SQLite
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///data/agnara.db")
+from app.settings import settings
 
-# For async SQLite, the scheme needs to be sqlite+aiosqlite
+DATABASE_URL = settings.DATABASE_URL
+
 if DATABASE_URL.startswith("sqlite:///") and not DATABASE_URL.startswith(
     "sqlite+aiosqlite:///"
 ):
@@ -14,7 +14,7 @@ if DATABASE_URL.startswith("sqlite:///") and not DATABASE_URL.startswith(
 
 engine = create_async_engine(
     DATABASE_URL,
-    echo=os.getenv("APP_ENV") == "development",
+    echo=settings.DEBUG,
     connect_args={"check_same_thread": False}
     if DATABASE_URL.startswith("sqlite")
     else {},

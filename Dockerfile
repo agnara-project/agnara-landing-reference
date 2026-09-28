@@ -1,5 +1,4 @@
-# Use an official Python runtime as a parent image
-FROM python:3.12-slim
+FROM python:3.14-slim
 
 # Set working directory
 WORKDIR /app
@@ -12,16 +11,16 @@ ENV PYTHONUNBUFFERED=1
 RUN pip install uv
 
 # Copy only the files needed for installation to leverage Docker cache
-COPY pyproject.toml README.md ./
-# For this reference app, we copy everything early as there is no uv.lock yet, 
-# but in a real app, you'd generate a lock file and install dependencies first.
-# RUN uv pip install --system -r pyproject.toml
+COPY pyproject.toml uv.lock README.md ./
+
+# Install dependencies without installing the project itself
+RUN uv sync --frozen --no-install-project --no-dev
 
 # Copy the rest of the application code
 COPY . .
 
-# Install dependencies into the system python environment
-RUN uv pip install --system -e .
+# Install the project
+RUN uv sync --frozen --no-dev
 
 # Create a non-root user
 RUN useradd -m appuser && chown -R appuser /app
@@ -33,9 +32,9 @@ USER appuser
 # Expose port
 EXPOSE 8000
 
-# Healthcheck
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:8000/health || exit 1
+# Healthcheck without curl
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD /app/.venv/bin/python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
 
 # Run Uvicorn
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["/app/.venv/bin/uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

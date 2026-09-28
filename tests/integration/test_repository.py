@@ -1,6 +1,6 @@
 import pytest
 
-from app.infrastructure.repositories import SqlAlchemyContactRepository
+from app.infrastructure.persistence.repositories import SqlAlchemyContactRepository
 
 
 @pytest.mark.asyncio
